@@ -8,4 +8,4 @@ print(linguagens.pop(0))  # python
 frutas = ['abacaxi', 'caqui', 'damasco', 'figo']
 print(frutas)
 frutas.pop(1)
-print(frutas)
+print(frutas)g
