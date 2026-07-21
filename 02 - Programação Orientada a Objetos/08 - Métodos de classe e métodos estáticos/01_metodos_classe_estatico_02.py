@@ -13,7 +13,6 @@ class Data:
          É muito usado como um construtor alternativo (padrão Factory),
          permitindo criar instâncias da classe a partir de formatos diferentes
          (como um texto vindo de um banco de dados ou de uma API).
-
         """
 
     @classmethod
