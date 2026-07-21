@@ -16,14 +16,18 @@ class Bicicleta:
         print("Vrummmmm...")
 
     def __str__(self):
+        print(self.__dict__.items())
         return f"{self.__class__.__name__}: {', '.join([f'{chave}={valor}' for chave, valor in self.__dict__.items()])}"
 
+    #def __str__(self):
+    #    return f"O nome da classe é {self.__class__.__name__}"
 
-b1 = Bicicleta("vermelha", "caloi", 2022, 600)
-b1.buzinar()
-b1.correr()
-b1.parar()
-print(b1.cor, b1.modelo, b1.ano, b1.valor)
+obj = Bicicleta("vermelha", "caloi", 2022, 600)
+obj.buzinar()
+obj.correr()
+obj.parar()
+print(f'Imprimindo a instancia da classe Bicicleta => {obj}')
+print(obj.cor, obj.modelo, obj.ano, obj.valor)
 
 b2 = Bicicleta("verde", "monark", 2000, 189)
 print(b2)

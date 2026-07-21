@@ -5,7 +5,8 @@ class Passaro:
 
 class Pardal(Passaro):
     def voar(self):
-        print("Pardal pode voar")
+        super().voar()
+        # print("Pardal pode voar")
 
 
 class Avestruz(Passaro):
