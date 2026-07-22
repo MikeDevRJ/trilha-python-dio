@@ -10,3 +10,6 @@ print(data_hora_atual.strftime(mascara_ptbr))
 data_convertida = datetime.strptime(data_hora_str, mascara_en)
 print(data_convertida)
 print(type(data_convertida))
+
+data_obj = datetime.strptime("22/07/2026", "%d/%m/%Y")
+print(data_obj)
