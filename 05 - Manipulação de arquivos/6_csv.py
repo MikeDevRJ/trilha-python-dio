@@ -32,6 +32,7 @@ except IOError as exc:
 try:
     with open(ROOT_PATH / "usuarios.csv", newline="") as csvfile:
         reader = csv.DictReader(csvfile)
+        print(reader.fieldnames)
         for row in reader:
             print(f"ID: {row['id']}")
             print(f"Nome: {row['nome']}")
