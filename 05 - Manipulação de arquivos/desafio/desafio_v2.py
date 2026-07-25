@@ -233,7 +233,7 @@ class Deposito(Transacao):
 def log_transacao(func):
     def envelope(*args, **kwargs):
         resultado = func(*args, **kwargs)
-        data_hora = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(ROOT_PATH / "log.txt", "a") as arquivo:
             arquivo.write(
                 f"[{data_hora}] Função '{func.__name__}' executada com argumentos {args} e {kwargs}. "
