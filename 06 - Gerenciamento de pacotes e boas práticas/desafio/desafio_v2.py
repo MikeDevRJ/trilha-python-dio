@@ -1,5 +1,5 @@
 import textwrap
-from abc import ABC, abstractclassmethod, abstractproperty
+from abc import ABC, abstractmethod
 from datetime import datetime
 
 
@@ -21,7 +21,9 @@ class ContasIterador:
             Saldo:\t\tR$ {conta.saldo:.2f}
         """
         except IndexError:
-            raise StopIteration
+            # O 'from None' avisa o Ruff que você intencionalmente
+            # quer esconder a exceção IndexError original.
+            raise StopIteration from None
         finally:
             self._index += 1
 
@@ -123,7 +125,11 @@ class ContaCorrente(Conta):
 
     def sacar(self, valor):
         numero_saques = len(
-            [transacao for transacao in self.historico.transacoes if transacao["tipo"] == Saque.__name__]
+            [
+                transacao
+                for transacao in self.historico.transacoes
+                if transacao["tipo"] == Saque.__name__
+            ]
         )
 
         excedeu_limite = valor > self._limite
@@ -167,14 +173,19 @@ class Historico:
 
     def gerar_relatorio(self, tipo_transacao=None):
         for transacao in self._transacoes:
-            if tipo_transacao is None or transacao["tipo"].lower() == tipo_transacao.lower():
+            if (
+                tipo_transacao is None
+                or transacao["tipo"].lower() == tipo_transacao.lower()
+            ):
                 yield transacao
 
     def transacoes_do_dia(self):
         data_atual = datetime.utcnow().date()
         transacoes = []
         for transacao in self._transacoes:
-            data_transacao = datetime.strptime(transacao["data"], "%d-%m-%Y %H:%M:%S").date()
+            data_transacao = datetime.strptime(
+                transacao["data"], "%d-%m-%Y %H:%M:%S"
+            ).date()
             if data_atual == data_transacao:
                 transacoes.append(transacao)
         return transacoes
@@ -182,12 +193,13 @@ class Historico:
 
 class Transacao(ABC):
     @property
-    @abstractproperty
+    @abstractmethod
     def valor(self):
         pass
 
-    @abstractclassmethod
-    def registrar(self, conta):
+    @classmethod
+    @abstractmethod
+    def registrar(cls, conta):
         pass
 
 
@@ -315,7 +327,7 @@ def exibir_extrato(clientes):
     tem_transacao = False
     for transacao in conta.historico.gerar_relatorio():
         tem_transacao = True
-        extrato += f'\n{transacao["tipo"]}:\n\tR$ {transacao["valor"]:.2f}'
+        extrato += f"\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"
 
     if not tem_transacao:
         extrato = "Não foram realizadas movimentações"
@@ -336,9 +348,13 @@ def criar_cliente(clientes):
 
     nome = input("Informe o nome completo: ")
     data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
-    endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
+    endereco = input(
+        "Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): "
+    )
 
-    cliente = PessoaFisica(nome=nome, data_nascimento=data_nascimento, cpf=cpf, endereco=endereco)
+    cliente = PessoaFisica(
+        nome=nome, data_nascimento=data_nascimento, cpf=cpf, endereco=endereco
+    )
 
     clientes.append(cliente)
 
@@ -355,7 +371,9 @@ def criar_conta(numero_conta, clientes, contas):
         return
 
     # NOTE: O valor padrão de limite de saques foi alterado para 50 saques
-    conta = ContaCorrente.nova_conta(cliente=cliente, numero=numero_conta, limite=500, limite_saques=50)
+    conta = ContaCorrente.nova_conta(
+        cliente=cliente, numero=numero_conta, limite=500, limite_saques=50
+    )
     contas.append(conta)
     cliente.contas.append(conta)
 
@@ -377,28 +395,25 @@ def main():
 
         if opcao == "d":
             depositar(clientes)
-
         elif opcao == "s":
             sacar(clientes)
-
         elif opcao == "e":
             exibir_extrato(clientes)
-
         elif opcao == "nu":
             criar_cliente(clientes)
-
         elif opcao == "nc":
             numero_conta = len(contas) + 1
             criar_conta(numero_conta, clientes, contas)
-
         elif opcao == "lc":
             listar_contas(contas)
-
         elif opcao == "q":
             break
-
         else:
-            print("\n@@@ Operação inválida, por favor selecione novamente a operação desejada. @@@")
+            print(
+                "\n@@@ Operação inválida, por favor selecione novamente "
+                "a operação desejada. @@@"
+            )
 
 
-main()
+if __name__ == "__main__":
+    main()
