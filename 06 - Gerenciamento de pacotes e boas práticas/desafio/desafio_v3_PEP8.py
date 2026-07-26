@@ -1,6 +1,6 @@
 import textwrap
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class ContasIterador:
@@ -12,20 +12,22 @@ class ContasIterador:
         return self
 
     def __next__(self):
-        try:
-            conta = self.contas[self._index]
-            return f"""\
+        # Evitamos try/except/finally aqui porque o controle do limite da
+        # lista é perfeitamente previsível com len(). Tratar um IndexError
+        # com try/finally exigiria capturar a exceção para relançar
+        # StopIteration e causaria incrementos desnecessários no _index.
+        if self._index >= len(self.contas):
+            raise StopIteration
+
+        conta = self.contas[self._index]
+        self._index += 1
+
+        return f"""\
             Agência:\t{conta.agencia}
             Número:\t\t{conta.numero}
             Titular:\t{conta.cliente.nome}
             Saldo:\t\tR$ {conta.saldo:.2f}
         """
-        except IndexError:
-            # O 'from None' avisa o Ruff que você intencionalmente
-            # quer esconder a exceção IndexError original.
-            raise StopIteration from None
-        finally:
-            self._index += 1
 
 
 class Cliente:
@@ -120,7 +122,7 @@ class ContaCorrente(Conta):
         self._limite_saques = limite_saques
 
     @classmethod
-    def nova_conta(cls, cliente, numero, limite, limite_saques):
+    def nova_conta(cls, cliente, numero, limite=500, limite_saques=3):
         return cls(numero, cliente, limite, limite_saques)
 
     def sacar(self, valor):
@@ -167,7 +169,7 @@ class Historico:
             {
                 "tipo": transacao.__class__.__name__,
                 "valor": transacao.valor,
-                "data": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+                "data": datetime.now(timezone.utc).strftime("%d-%m-%Y %H:%M:%S"),
             }
         )
 
@@ -180,7 +182,7 @@ class Historico:
                 yield transacao
 
     def transacoes_do_dia(self):
-        data_atual = datetime.utcnow().date()
+        data_atual = datetime.now(timezone.utc).date()
         transacoes = []
         for transacao in self._transacoes:
             data_transacao = datetime.strptime(
@@ -197,13 +199,8 @@ class Transacao(ABC):
     def valor(self):
         pass
 
-    # CORREÇÃO 1: Use a sintaxe moderna (classmethod sobre abstractmethod)
-    @classmethod
     @abstractmethod
-    # CORREÇÃO 2: Mude o primeiro parâmetro de 'self' para 'cls'
-    def registrar(cls, conta):
-        # Como é um método de classe (@classmethod), cls representa a classe Transacao.
-        # Você não tem acesso a 'self' aqui.
+    def registrar(self, conta):
         pass
 
 
@@ -240,25 +237,25 @@ class Deposito(Transacao):
 def log_transacao(func):
     def envelope(*args, **kwargs):
         resultado = func(*args, **kwargs)
-        print(f"{datetime.now()}: {func.__name__.upper()}")
+        print(f"{datetime.now(timezone.utc)}: {func.__name__.upper()}")
         return resultado
 
     return envelope
 
 
 def menu():
-    menu = """\n
+    texto_menu = """
     ================ MENU ================
-    [d]\tDepositar
-    [s]\tSacar
-    [e]\tExtrato
-    [nc]\tNova conta
-    [lc]\tListar contas
-    [nu]\tNovo usuário
-    [q]\tSair
+    [D]  Depositar
+    [S]  Sacar
+    [E]  Extrato
+    [C]  Nova conta
+    [L]  Listar contas
+    [U]  Novo usuário
+    [Q]  Sair
     => """
-
-    return input(textwrap.dedent(menu))
+    # .strip().lower() garante que 'C', 'c' ou ' c ' funcionem perfeitamente
+    return input(textwrap.dedent(texto_menu)).strip().lower()
 
 
 def filtrar_cliente(cpf, clientes):
@@ -269,9 +266,8 @@ def filtrar_cliente(cpf, clientes):
 def recuperar_conta_cliente(cliente):
     if not cliente.contas:
         print("\n@@@ Cliente não possui conta! @@@")
-        return
+        return None
 
-    # FIXME: não permite cliente escolher a conta
     return cliente.contas[0]
 
 
@@ -374,7 +370,6 @@ def criar_conta(numero_conta, clientes, contas):
         print("\n@@@ Cliente não encontrado, fluxo de criação de conta encerrado! @@@")
         return
 
-    # NOTE: O valor padrão de limite de saques foi alterado para 50 saques
     conta = ContaCorrente.nova_conta(
         cliente=cliente, numero=numero_conta, limite=500, limite_saques=50
     )
@@ -397,32 +392,27 @@ def main():
     while True:
         opcao = menu()
 
-        if opcao == "d":
-            depositar(clientes)
-
-        elif opcao == "s":
-            sacar(clientes)
-
-        elif opcao == "e":
-            exibir_extrato(clientes)
-
-        elif opcao == "nu":
-            criar_cliente(clientes)
-
-        elif opcao == "nc":
-            numero_conta = len(contas) + 1
-            criar_conta(numero_conta, clientes, contas)
-
-        elif opcao == "lc":
-            listar_contas(contas)
-
-        elif opcao == "q":
-            break
-
-        else:
-            print(
-                "\n@@@ Operação inválida, por favor selecione novamente a operação desejada. @@@"
-            )
+        match opcao:
+            case "d":
+                depositar(clientes)
+            case "s":
+                sacar(clientes)
+            case "e":
+                exibir_extrato(clientes)
+            case "c":
+                numero_conta = len(contas) + 1
+                criar_conta(numero_conta, clientes, contas)
+            case "l":
+                listar_contas(contas)
+            case "u":
+                criar_cliente(clientes)
+            case "q":
+                break
+            case _:
+                print(
+                    "\n@@@ Operação inválida, por favor selecione novamente "
+                    "a operação desejada. @@@"
+                )
 
 
 if __name__ == "__main__":
