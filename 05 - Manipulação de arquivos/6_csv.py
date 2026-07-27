@@ -13,19 +13,19 @@ try:
         escritor.writerow(["id", "nome"])
         escritor.writerow(["1", "Maria"])
         escritor.writerow(["2", "João"])
-except IOError as exc:
+except OSError as exc:
     print(f"Erro ao criar o arquivo. {exc}")
 
 
 try:
-    with open(ROOT_PATH / "usuarios.csv", "r", newline="", encoding="utf-8") as arquivo:
+    with open(ROOT_PATH / "usuarios.csv", newline="", encoding="utf-8") as arquivo:
         leitor = csv.reader(arquivo)
         for idx, row in enumerate(leitor):
             if idx == 0:
                 continue
             print(f"ID: {row[COLUNA_ID]}")
             print(f"Nome: {row[COLUNA_NOME]}")
-except IOError as exc:
+except OSError as exc:
     print(f"Erro ao criar o arquivo. {exc}")
 
 
@@ -36,5 +36,5 @@ try:
         for row in reader:
             print(f"ID: {row['id']}")
             print(f"Nome: {row['nome']}")
-except IOError as exc:
+except OSError as exc:
     print(f"Erro ao criar o arquivo. {exc}")

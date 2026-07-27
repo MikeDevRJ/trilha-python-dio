@@ -10,7 +10,13 @@ cursor.row_factory = sqlite3.Row
 
 def criar_tabela(conexao, cursor):
     cursor.execute(
-        "CREATE TABLE clientes (id INTEGER PRIMARY KEY AUTOINCREMENT, nome VARCHAR(100), email VARCHAR(150))"
+        """
+        CREATE TABLE clientes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome VARCHAR(100),
+            email VARCHAR(150)
+        );
+        """
     )
     conexao.commit()
 
@@ -54,7 +60,7 @@ for cliente in clientes:
 cliente = recuperar_cliente(cursor, 2)
 print(dict(cliente))
 print(cliente["id"], cliente["nome"], cliente["email"])
-print(f'Seja bem vindo ao sistema {cliente["nome"]}')
+print(f"Seja bem vindo ao sistema {cliente['nome']}")
 
 # dados = [
 #     ("Guilherme", "guilherme@gmail.com"),
